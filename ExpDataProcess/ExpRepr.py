@@ -1,30 +1,47 @@
+import time
+
 class ExpRepr(object):
 
     operatorList = [
-        ['=', '>=', '<=', '>', '<'],
+        ['=', '>=', '<=', '>', '<', '≤', '≥', '≠'],
         ['+', '-'],
         ['*', '/'],
-        ['^', '_']
+        ['^'],
+        ['_']
     ]
 
     bracket = ['(', '{', '[']
 
     left_bracket = [')', '}', ']']
 
-    operLevels = ['relation', 'priOperator', 'operator', 'orientation']
+    operLevels = ['relation', 'priOperator', 'operator', 'uporientation', 'downorientation']
 
     pattern = ['sin(e?x?p)', 'cos(e?x?p)', 'tan(e?x?p)', '(e?x?p)', '[e?x?p]', '{e?x?p}', 'special', 'e?x?p']
 
     def __init__(self, exp, op='', pat=''):
         self.exp = exp
+        if op == '' and pat == '':
+            op, pat = self._pre_process(exp)
         self.childrens = []
         self.operLevel = ''
         if self._is_leaf() is not True:
             self._parse_exp()
-            self._op = op
-            self._pat = pat
+
+        self._op = op
+        self._pat = pat
+
+    def _pre_process(self, exp):
+        idx_ = [0]
+        op_r = self._get_op(idx_, sum(self.operatorList, []))
+        exp_, pat_ = self._get_exp_pat_(idx_)
+        if idx_[0] >= len(exp):
+            if pat_ == '':
+                self.exp = exp
+                return
+            self.exp = exp_
+            return op_r, pat_
         else:
-            self._leaf_construct()
+            return '#', 'e?x?p'
 
     def _is_leaf(self):
         idx_ = [0]
@@ -66,7 +83,8 @@ class ExpRepr(object):
                 next_op_ = self._get_op(idx, oList)
                 idx[0] -= len(next_op_)
                 if next_op_ == '' and op_ == '#':
-                    return False
+                    if not (self.operatorList.index(oList) == 1 and pat_ != 'e?x?p'):
+                        return False
                 state = 'normal'
 
             self._new_exp(op_, exp_, pat_)
@@ -110,6 +128,8 @@ class ExpRepr(object):
 
     def _get_exp_pat_(self, idx):
         idx_ = idx[0]
+        if idx_ >= len(self.exp):
+            return '', ''
         for op_ in sum(self.operatorList, []):
             if self.exp.find(op_, idx[0]) == idx[0]:
                 return '', ''
@@ -170,8 +190,87 @@ class ExpRepr(object):
 
         return -1 if min_ == 999 else min_
 
+    def print_structure(self):
+        self.tree_data = []
+        self._load_tree()
+        for row in self.tree_data:
+            print(row)
+
+    def _load_tree(self, start=0, exp_obj=None, f=0):
+        if exp_obj == None:
+            exp_obj = self
+
+        width_ = self._get_exp_len(exp_obj)
+        indent_ = int((width_ - len(exp_obj.exp)) / 2 + start)
+        self._load_tree_data(f, indent_, exp_obj)
+        for exp_obj_ in exp_obj.childrens:
+            self._load_tree(start, exp_obj_, f+1)
+            start += self._get_exp_len(exp_obj_)
+
+
+    def _get_exp_len(self, exp_obj):
+        if len(exp_obj.childrens) == 0:
+            return len(self._load_exp(exp_obj)) + 6
+
+        len_ = 0
+
+        for exp_obj_ in exp_obj.childrens:
+            len_ += self._get_exp_len(exp_obj_)
+
+        return len_
+
+    def _load_exp(self, exp_obj):
+        return exp_obj._op + exp_obj._pat.replace('e?x?p', exp_obj.exp)
+
+    def _load_tree_data(self, f, indent, exp_obj):
+        while len(self.tree_data) <= f * 2:
+            self.tree_data.append('')
+
+        if f * 2 - 1 >= 0:
+            self.tree_data[f*2-1] += ' ' * (indent + int(len(self._load_exp(exp_obj)) / 2) - len(self.tree_data[f*2-1]))
+        self.tree_data[f * 2] += ' ' * (indent - len(self.tree_data[f * 2]))
+
+        if f * 2 - 1 >= 0:
+            self.tree_data[f*2-1] += '|'
+        self.tree_data[f*2] += self._load_exp(exp_obj)
+
+    def exp_repr(self, exp_obj=None):
+        if exp_obj == None:
+            exp_obj = self
+
+        rst = ''
+
+        if len(exp_obj.childrens) == 0:
+            rst = exp_obj.exp
+        for cidx, chld in enumerate(exp_obj.childrens):
+            exp_ = self.exp_repr(chld)
+            if cidx > 0 and (chld._op == '#' or chld._op == ''):
+                exp_ = '*' + exp_
+            rst += exp_
+
+        rst = exp_obj._pat.replace('e?x?p', rst)
+        if exp_obj._op != '#':
+            rst = exp_obj._op + rst
+        return rst
+
 
 
 if __name__ == '__main__':
-    a = ExpRepr('f(a)')
-    print('sad')
+    # print(' ' * 6 + '123')
+    # a = ExpRepr('x*z+y+z+2*cos(c+e*b)')
+    # a = ExpRepr('((((Pi)/2))+a)')
+    # a = ExpRepr('(bcosC-a)+2bsinC-c=0')
+    s = time.time()
+    a = ExpRepr('f(x)=((3^(1/2)))(cosx)^2+sinx*cosx+((((3^(1/2)))/2))=((3^(1/2)))*(((1+cos2x)/2))+(1/2)sin2x+((((3^(1/2)))/2))=sin(2x+(((Pi)/3)))+((3^(1/2)))')
+    e = time.time()
+    print(e-s<0.01)
+    # a = ExpRepr('((3^(1/2)))(cosx)^2')
+    # a = ExpRepr('(-α<((f(x')
+    # a = ExpRepr('-α<k<α')
+    # a = ExpRepr('x-6≤-2x≤0')
+    # a = ExpRepr('f_S(1)=(Com_1_1)=1')
+    # a = ExpRepr('y=1+sin0=1')
+    # a = ExpRepr('y=1+sin(-(((Pi)/2)))=0')
+    a.print_structure()
+    print(a.exp_repr())
+    print('')
