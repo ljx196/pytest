@@ -1,4 +1,5 @@
 import time
+import re
 
 class ExpRepr(object):
 
@@ -19,6 +20,7 @@ class ExpRepr(object):
     pattern = ['sin(e?x?p)', 'cos(e?x?p)', 'tan(e?x?p)', '(e?x?p)', '[e?x?p]', '{e?x?p}', 'special', 'e?x?p']
 
     def __init__(self, exp, op='', pat=''):
+        self._vars = set()
         self.exp = exp
         if op == '' and pat == '':
             op, pat = self._pre_process(exp)
@@ -29,6 +31,12 @@ class ExpRepr(object):
 
         self._op = op
         self._pat = pat
+
+        if self.operLevel == '' and not re.match('[0-9]+', self.exp):
+            self._vars.add(self.exp)
+
+    def get_all_symbols(self):
+        return self._vars
 
     def _pre_process(self, exp):
         idx_ = [0]
@@ -124,6 +132,7 @@ class ExpRepr(object):
 
     def _new_exp(self, op, exp, pat):
         exp_obj = ExpRepr(exp, op, pat)
+        self._vars = self._vars | exp_obj._vars
         self.childrens.append(exp_obj)
 
     def _get_exp_pat_(self, idx):
@@ -244,7 +253,7 @@ class ExpRepr(object):
             rst = exp_obj.exp
         for cidx, chld in enumerate(exp_obj.childrens):
             exp_ = self.exp_repr(chld)
-            if cidx > 0 and (chld._op == '#' or chld._op == ''):
+            if cidx > 0 and (chld._op == '#' or chld._op == '') and chld.exp[0] == '(':
                 exp_ = '*' + exp_
             rst += exp_
 
@@ -260,10 +269,13 @@ if __name__ == '__main__':
     # a = ExpRepr('x*z+y+z+2*cos(c+e*b)')
     # a = ExpRepr('((((Pi)/2))+a)')
     # a = ExpRepr('(bcosC-a)+2bsinC-c=0')
-    s = time.time()
+    # s = time.time()
+    # a = ExpRepr('1+cos(b*c)')
+    # a = ExpRepr('3^(1/2)')
     a = ExpRepr('f(x)=((3^(1/2)))(cosx)^2+sinx*cosx+((((3^(1/2)))/2))=((3^(1/2)))*(((1+cos2x)/2))+(1/2)sin2x+((((3^(1/2)))/2))=sin(2x+(((Pi)/3)))+((3^(1/2)))')
-    e = time.time()
-    print(e-s<0.01)
+    # e = time.time()
+    # print(e-s<0.01)
+    # a = ExpRepr('-cos(a)+c+d')
     # a = ExpRepr('((3^(1/2)))(cosx)^2')
     # a = ExpRepr('(-α<((f(x')
     # a = ExpRepr('-α<k<α')
@@ -271,6 +283,7 @@ if __name__ == '__main__':
     # a = ExpRepr('f_S(1)=(Com_1_1)=1')
     # a = ExpRepr('y=1+sin0=1')
     # a = ExpRepr('y=1+sin(-(((Pi)/2)))=0')
+    print(a._vars)
     a.print_structure()
-    print(a.exp_repr())
+    # print(a.exp_repr())
     print('')

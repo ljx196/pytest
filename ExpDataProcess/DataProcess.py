@@ -68,16 +68,20 @@ def lineprocess2(line):
 def lineprocess3(line):
     linesplit = line.split()
 
-    dlabels = ['','表','∨','轨','⨁','ŷ','程','２','','分','','∝','','υ','↓','数',
-               '１','﹡','直','最','７','','★','＇','₂','﹑','⋯','⊗','解','垂','≡','不',
-               'Ⅱ','ｂ','和','等','~','.','公','％','值','般','','←','平','﹐','≪','♁',
-               '｛', '⊊', '﹛', '∠','⌈','方','曲','☆','↘','∩','⊕','⊂','⌒','项','￢','ʹ',
-               'ⅲ','｝','﹢','∃','ع', '→','∼','≠','前','┉','〔','ε','ⅱ','⊇','⊃','Ω','\'',
-               '″','∶','∀','Г','３','⟹','０','双','⋮','ϖ','∫','※','一','⌉','⊄','`','ξ',
-               '','迹','⑷','通','ζ','∓','⟩','','⇔','℃','﹙','τ','＠','Ⅲ','﹒','ϑ','〈',
-               'ϵ','⇏',',','，','小','组','ψ','ⅳ','列','↗','︰','','﹚','▽','●','⫋','ɛ',
-               'η','√','︱','▪','～','≦','达','〉','﹜','⟺','≈','〕','¬','','ˈ','析','差',
-               '线','@','₁','》','∣','∗','︳','｜','Ⅰ ','═','≧','⩾','６','ｔ','﹤','﹡']
+    # dlabels = ['','表','∨','轨','⨁','ŷ','程','２','','分','','∝','','υ','↓','数',
+    #            '１','﹡','直','最','７','','★','＇','₂','﹑','⋯','⊗','解','垂','≡','不',
+    #            'Ⅱ','ｂ','和','等','~','.','公','％','值','般','','←','平','﹐','≪','♁',
+    #            '｛', '⊊', '﹛', '∠','⌈','方','曲','☆','↘','∩','⊕','⊂','⌒','项','￢','ʹ',
+    #            'ⅲ','｝','﹢','∃','ع', '→','∼','≠','前','┉','〔','ε','ⅱ','⊇','⊃','Ω','\'',
+    #            '″','∶','∀','Г','３','⟹','０','双','⋮','ϖ','∫','※','一','⌉','⊄','`','ξ',
+    #            '','迹','⑷','通','ζ','∓','⟩','','⇔','℃','﹙','τ','＠','Ⅲ','﹒','ϑ','〈',
+    #            'ϵ','⇏',',','，','小','组','ψ','ⅳ','列','↗','︰','','﹚','▽','●','⫋','ɛ',
+    #            'η','√','︱','▪','～','≦','达','〉','﹜','⟺','≈','〕','¬','','ˈ','析','差',
+    #            '线','@','₁','》','∣','∗','︳','｜','Ⅰ ','═','≧','⩾','６','ｔ','﹤','﹡','《',
+    #            '','⟨','Ⅰ','—','∂','I','○','↑','㏑','⋂','ⅰ','⌋','J','・','%','γ','∑','Γ',
+    #            '°','','&','Β','⨂','４','H','Z','','','ϕ','┐','♧','∧','⫌','Χ','̂','ƒ',
+    #            'δ','μ','σ','ν','j','U','Y','Α','〉','⌊']
+    dlabels = ['','L','>']
 
     for labeli in dlabels:
         if linesplit[0].count(labeli):
@@ -195,10 +199,10 @@ def process(path, opath, bdir):
 
     err = 0
     cnt = 0
-    with open('C:\WorkSpace\ExpData\ExpDatav2\exceptdata2.csv', 'a+', encoding='utf-8') as efile:
+    with open('C:\WorkSpace\ExpData\ExpDatav2\exceptdata3.csv', 'w+', encoding='utf-8') as efile:
         for lidx, line in enumerate(lines):
             try:
-                olines.append(lineprocess3(line))
+                olines.append(lineprocess13(line))
             except(BaseException, func_timeout.exceptions.FunctionTimedOut):
                 efile.write(line)
                 err += 1
@@ -215,28 +219,56 @@ def process(path, opath, bdir):
 def getlinesymbol(line):
     linespt = line.split()
 
-    return set([i for i in linespt[0]])
+    return [i for i in linespt[0]]
+
+def getvariables(line):
+    linespt = line.split()
+
+    exp_obj = ExpRepr(linespt[0])
+
+    return exp_obj.get_all_symbols
+
+@func_timeout.func_set_timeout(0.01)
+def get_all_symb(path, opath, bdir):
+    lines = getalldatatolines(path, bdir)
+
+    symset = set()
+    for line in lines:
+        linevarset = getvariables(line)
+        symset = symset | symset
+
+    writetofile(set2list(symset), opath)
+
+def set2list(sset:set):
+    return [s+'\n' for s in sset]
 
 
 def get_all_symb(path, opath, bdir):
     lines = getalldatatolines(path, bdir)
 
-    symbset = set()
+    symbdict = {}
     for line in lines:
-        linesymbset = getlinesymbol(line)
-        symbset = symbset | linesymbset
 
-    writetofile(set2list(symbset), opath)
+        linesymblist = getlinesymbol(line)
+        add2dict(linesymblist, symbdict)
 
-def set2list(sset):
+    # for key in symbdict:
+    #     if symbdict[key] == 1 or symbdict[key] == 860 or symbdict[key] == 4831:
+    #         print(key)
+    writetofile(dict2list(symbdict), opath)
+
+def add2dict(llist, sdict:dict):
+    for i in llist:
+        if sdict.__contains__(i):
+            sdict[i] += 1
+        else:
+            sdict[i] = 1
+
+def dict2list(ddict):
     rst = []
 
-    for idx, i in enumerate(sset):
-        if idx % 10 == 0 and idx != 0:
-            i += '\n'
-        else:
-            i += ' '
-        rst.append(i)
+    for key in ddict:
+        rst.append(key + ": " + str(ddict[key]) + '\n')
 
     return rst
 
@@ -254,10 +286,11 @@ def test1():
 if __name__ == '__main__':
     # 数据文件夹path，读取所有以bdir结尾的文件，并且输出到opath中输出文件名为系统当前时间+.csv
     path = 'C:\WorkSpace\ExpData\ExpDatav2'
-    bdir = '20201203095536.csv'
+    bdir = '20201204105445.csv'
     opath = 'C:\WorkSpace\ExpData\ExpDatav2'
     # print('f(x)=((3^(1/2)))(cosx)^2+sinx*cosx+((((3^(1/2)))/2))=((3^(1/2)))*(((1+cos2x)/2))+(1/2)sin2x+((((3^(1/2)))/2))=sin(2x+(((Pi)/3)))+((3^(1/2)))	函数	22083943')
     # print(lineprocess13('(-α<((f(x	_2)-f(x	_1))/(x	_2-x	_1))<α)	不等式	不等式	17274911'))
+    # get_all_symb(path, opath, bdir)
     get_all_symb(path, opath, bdir)
     # process(path, opath, bdir)
     # test1()
