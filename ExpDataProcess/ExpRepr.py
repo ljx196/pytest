@@ -19,6 +19,9 @@ class ExpRepr(object):
 
     pattern = ['sin(e?x?p)', 'cos(e?x?p)', 'tan(e?x?p)', '(e?x?p)', '[e?x?p]', '{e?x?p}', 'special', 'e?x?p']
 
+    keyword = {'sin':'sin(e?x?p)', 'cos':'cos(e?x?p)', 'tan':'tan(e?x?p)', 'ln':'ln(e?x?p)', 'log':'log(e?x?p)',
+               'Pi':'Pi'}
+
     def __init__(self, exp, op='', pat=''):
         self._vars = set()
         self.exp = exp
@@ -272,7 +275,7 @@ if __name__ == '__main__':
     # s = time.time()
     # a = ExpRepr('1+cos(b*c)')
     # a = ExpRepr('3^(1/2)')
-    a = ExpRepr('f(x)=((3^(1/2)))(cosx)^2+sinx*cosx+((((3^(1/2)))/2))=((3^(1/2)))*(((1+cos2x)/2))+(1/2)sin2x+((((3^(1/2)))/2))=sin(2x+(((Pi)/3)))+((3^(1/2)))')
+    a = ExpRepr('((x/(|x|)))+((y/(|y|)))+((z/(|z|)))+(((|xyz|)/(xyz)))')
     # e = time.time()
     # print(e-s<0.01)
     # a = ExpRepr('-cos(a)+c+d')

@@ -1,4 +1,5 @@
 import os
+import time
 import datetime
 import re
 from ExpDataProcess.ExpRepr import ExpRepr
@@ -117,7 +118,7 @@ def lineprocess5(line):
 
 # 去掉包含字符x的行
 def lineprocess6(line):
-    if line.count('∨'):
+    if line.count(':'):
         return ''
 
     return line
@@ -191,6 +192,48 @@ def lineprocess13(line):
 
     return '\t'.join(linesplit) + '\n'
 
+def lineprocess14(line):
+    linespt = line.split()
+
+    bracket = 0
+    for idx, symb in enumerate(linespt[0]):
+        if symb == '(':
+            if idx + 1 < len(linespt[0]) and linespt[0][idx+1] == ')':
+                raise Exception
+            bracket += 1
+        if symb == ')':
+            bracket -= 1
+        if bracket < 0:
+            raise Exception
+
+    return line
+
+def lineprocess15(line):
+    s = '＞'
+    t = '>'
+    return line.replace(s, t)
+
+def lineprocess16(line):
+    linespt = line.split()
+
+    back = ''
+
+    for spt in linespt[1:]:
+        back += '\t' + spt
+
+    back += '\n'
+
+    if linespt[0].count(':'):
+        return linespt[0].split(':')[1] + back
+
+    return line
+
+def lineprocess17(line):
+    if line.count('|') % 2:
+        line = ''
+
+    return line
+
 
 def process(path, opath, bdir):
     lines = getalldatatolines(path, bdir)
@@ -199,10 +242,10 @@ def process(path, opath, bdir):
 
     err = 0
     cnt = 0
-    with open('C:\WorkSpace\ExpData\ExpDatav2\exceptdata3.csv', 'w+', encoding='utf-8') as efile:
+    with open('C:\WorkSpace\ExpData\ExpDatav2\exceptdata5.csv', 'w+', encoding='utf-8') as efile:
         for lidx, line in enumerate(lines):
             try:
-                olines.append(lineprocess13(line))
+                olines.append(lineprocess17(line))
             except(BaseException, func_timeout.exceptions.FunctionTimedOut):
                 efile.write(line)
                 err += 1
@@ -221,23 +264,31 @@ def getlinesymbol(line):
 
     return [i for i in linespt[0]]
 
+@func_timeout.func_set_timeout(0.01)
 def getvariables(line):
     linespt = line.split()
 
     exp_obj = ExpRepr(linespt[0])
 
-    return exp_obj.get_all_symbols
+    return exp_obj._vars
 
-@func_timeout.func_set_timeout(0.01)
-def get_all_symb(path, opath, bdir):
+def get_all_var(path, opath, bdir):
     lines = getalldatatolines(path, bdir)
 
-    symset = set()
+    symdict = {}
+    err = 0
+    cnt = 0
     for line in lines:
-        linevarset = getvariables(line)
-        symset = symset | symset
+        cnt += 1
+        # print(cnt)
+        try:
+            linesylist = getvariables(line)
+            add2dict(linesylist, symdict)
+        except(BaseException,func_timeout.exceptions.FunctionTimedOut):
+            err += 1
+            print(err)
 
-    writetofile(set2list(symset), opath)
+    writetofile(dict2list(symdict), opath)
 
 def set2list(sset:set):
     return [s+'\n' for s in sset]
@@ -283,16 +334,81 @@ def test1():
         print(i+' ' + str(idx))
 
 
+def get_var_dict(lines):
+    rst = {}
+
+    for line in lines:
+        spt = line.split()
+        if rst.__contains__(int(spt[1])):
+            rst[int(spt[1])] += 1
+        else:
+            rst[int(spt[1])] = 1
+
+    return rst
+
+
+def get_var_distri(path, bdir, num):
+    lines = getalldatatolines(path, bdir)
+
+    cntdict = get_var_dict(lines)
+
+    cnt = 0
+    for key in cntdict:
+        if key < num:
+            cnt += cntdict[key] * key
+
+    print(cnt)
+
+def filter_lines(lines, vars):
+    rst = []
+    for idx, line in enumerate(lines):
+        flag = 0
+        for var in vars:
+            if line.count(var):
+                flag = 1
+                rst.append(line)
+                lines[idx] = ''
+            if flag == 1:
+                break
+
+    return rst
+
+def delete_var_num(path, dpath, opath, bdir, dbdir, num):
+    dlines = getalldatatolines(dpath, dbdir)
+    lines = getalldatatolines(path, bdir)
+
+    filtelist = []
+    for dline in dlines:
+        print(dline)
+        dspt = dline.split()
+        if int(dspt[1]) < num:
+            filtelist.append(dspt[0][:-1])
+
+    olines = filter_lines(lines, filtelist)
+
+    writetofile(olines, opath)
+    time.sleep(5)
+    writetofile(lines, opath)
+
+
 if __name__ == '__main__':
     # 数据文件夹path，读取所有以bdir结尾的文件，并且输出到opath中输出文件名为系统当前时间+.csv
     path = 'C:\WorkSpace\ExpData\ExpDatav2'
-    bdir = '20201204105445.csv'
+    bdir = '20201207105638.csv'
     opath = 'C:\WorkSpace\ExpData\ExpDatav2'
+    dpath = 'C:\WorkSpace\ExpData\ExpDatav2'
+    dbdir = '20201207142503.csv'
+    num = 1000
     # print('f(x)=((3^(1/2)))(cosx)^2+sinx*cosx+((((3^(1/2)))/2))=((3^(1/2)))*(((1+cos2x)/2))+(1/2)sin2x+((((3^(1/2)))/2))=sin(2x+(((Pi)/3)))+((3^(1/2)))	函数	22083943')
     # print(lineprocess13('(-α<((f(x	_2)-f(x	_1))/(x	_2-x	_1))<α)	不等式	不等式	17274911'))
     # get_all_symb(path, opath, bdir)
-    get_all_symb(path, opath, bdir)
-    # process(path, opath, bdir)
+    # get_all_var(path, opath, bdir)
+    # delete_var_num(path, dpath, opath, bdir, dbdir, num)
+    # get_var_distri(path, bdir, num)
+    process(path, opath, bdir)
+    # print(lineprocess16('p:x^2-4x+3≤0'))
+    # print('asd2fff'.replace('asd', 'c'))
+    # print(lineprocess14('m=-(1/2)	等式	17274702'))
     # test1()
     # test1()
     # print(lineprocess6(r'a^2003+b^2004=_,-1	等式	17274777'))
