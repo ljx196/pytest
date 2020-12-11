@@ -2,6 +2,7 @@ import os
 import time
 import datetime
 import re
+import random
 from ExpDataProcess.ExpRepr import ExpRepr
 import func_timeout
 
@@ -182,13 +183,13 @@ def lineprocess12(line):
     return line
 
 
-@func_timeout.func_set_timeout(0.01)
+@func_timeout.func_set_timeout(0.02)
 def lineprocess13(line):
     linesplit = line.split()
 
-    exp_obj = ExpRepr(linesplit[0])
+    exp_obj = ExpRepr(linesplit[0]).rpar_obj()
 
-    linesplit[0] = exp_obj.exp_repr()
+    linesplit[0] = exp_obj.good_form()
 
     return '\t'.join(linesplit) + '\n'
 
@@ -209,9 +210,11 @@ def lineprocess14(line):
     return line
 
 def lineprocess15(line):
-    s = '＞'
-    t = '>'
-    return line.replace(s, t)
+    s = ['[', ']']
+    t = ['(', ')']
+    for i in range(len(s)):
+        line = line.replace(s[i], t[i])
+    return line
 
 def lineprocess16(line):
     linespt = line.split()
@@ -234,23 +237,87 @@ def lineprocess17(line):
 
     return line
 
+def lineprocess18(line):
+    if line.count('|'):
+        spt = line.split()
+        tspt = '#' + spt[0] + '#'
+        sspt = tspt.split('|')
+        rst = ''
+        for idx in range(len(sspt)-1):
+            if idx % 2 == 0:
+                rst += sspt[idx] + 'abs(' + sspt[idx+1] + ')'
+
+        rst += sspt[len(sspt)-1]
+        return rst[1:-1]
+
+    return line
+
+@func_timeout.func_set_timeout(0.025)
+def lineprocess20(line):
+    spt = line.split()
+    origin = spt[0]
+
+    origin_exp = ExpRepr(origin).rpar_obj()
+    origin = origin_exp.good_form()
+    cnt = random.randint(1, 5)
+    change_list = origin_exp.datagen(cnt)
+    rst = [origin + '\t' + exp_ +'\n' for exp_ in change_list]
+
+    return rst
+
+def lineprocess21(lines):
+    tot = len(lines)
+
+    olines = []
+
+    for idx, line in enumerate(lines):
+        if idx % 200 == 0:
+            print(idx)
+        rnd = random.randint(0, 5)
+        spt = line.split()
+
+        if random.randint(0, 10) > 8:
+            exp = line.split()[random.randint(0, 1)]
+            exp_obj = ExpRepr(exp).rpar_obj()
+            while True:
+                fake_exp = exp_obj.fake_tree()
+                if fake_exp != exp:
+                    break
+            olines.append(exp + '\t' + fake_exp + '\n')
+        for _ in range(rnd):
+            slct = random.randint(0, 1)
+            slctline = random.randint(0, tot-1)
+            cnt = spt[slct] + '\t' + lines[slctline].split()[slct] + '\n'
+            olines.append(cnt)
+            if idx < 5:
+                print(cnt)
+
+    return olines
+
 
 def process(path, opath, bdir):
     lines = getalldatatolines(path, bdir)
 
     olines = []
 
+    olines = lineprocess21(lines)
+
     err = 0
     cnt = 0
-    with open('C:\WorkSpace\ExpData\ExpDatav2\exceptdata5.csv', 'w+', encoding='utf-8') as efile:
-        for lidx, line in enumerate(lines):
-            try:
-                olines.append(lineprocess17(line))
-            except(BaseException, func_timeout.exceptions.FunctionTimedOut):
-                efile.write(line)
-                err += 1
-                if err % 1000 == 0:
-                    print(err)
+    # with open('C:\WorkSpace\ExpData\ExpDatav2\exceptdata6.csv', 'w+', encoding='utf-8') as efile:
+    #     for lidx, line in enumerate(lines):
+    #         if lidx % 100 == 0:
+    #             print(lidx)
+    #         try:
+    #             olines.extend(lineprocess20(line))
+    #             # olines.append(lineprocess13(line))
+    #         except:
+    #             print(line)
+    #             print(lidx)
+    #             efile.write(line)
+    #             err += 1
+    #             if err % 1000 == 0:
+    #                 print(err)
 
         # olines.extend(lineprocess11(line))
         # oset = oset | lineprocess5(line)
@@ -390,22 +457,49 @@ def delete_var_num(path, dpath, opath, bdir, dbdir, num):
     time.sleep(5)
     writetofile(lines, opath)
 
+def linesprocess(lines, nlines):
+    for idx in range(len(lines)):
+        lines[idx] = lines[idx].strip() + '\t' + '1\n'
+        if idx < 5:
+            print(lines[idx])
+    for idx in range(len(nlines)):
+        nlines[idx] = nlines[idx].strip() + '\t' + '0\n'
+        if idx < 5:
+            print(nlines[idx])
+    lines.extend(nlines)
+    random.shuffle(lines)
+    return lines
+
+def shuffle_data(path, bdir, nbdir, opath):
+    lines = getalldatatolines(path, bdir)
+    nlines = getalldatatolines(path, nbdir)
+    print(lines[0].strip())
+    olines = linesprocess(lines, nlines)
+
+    writetofile(olines, opath)
+
 
 if __name__ == '__main__':
     # 数据文件夹path，读取所有以bdir结尾的文件，并且输出到opath中输出文件名为系统当前时间+.csv
     path = 'C:\WorkSpace\ExpData\ExpDatav2'
-    bdir = '20201207105638.csv'
+    bdir = '20201211112320.csv'
+    nbdir = '20201211163218.csv'
     opath = 'C:\WorkSpace\ExpData\ExpDatav2'
     dpath = 'C:\WorkSpace\ExpData\ExpDatav2'
     dbdir = '20201207142503.csv'
     num = 1000
+    # print(lineprocess20('x^2-4x+3≤0'))
     # print('f(x)=((3^(1/2)))(cosx)^2+sinx*cosx+((((3^(1/2)))/2))=((3^(1/2)))*(((1+cos2x)/2))+(1/2)sin2x+((((3^(1/2)))/2))=sin(2x+(((Pi)/3)))+((3^(1/2)))	函数	22083943')
     # print(lineprocess13('(-α<((f(x	_2)-f(x	_1))/(x	_2-x	_1))<α)	不等式	不等式	17274911'))
     # get_all_symb(path, opath, bdir)
     # get_all_var(path, opath, bdir)
     # delete_var_num(path, dpath, opath, bdir, dbdir, num)
     # get_var_distri(path, bdir, num)
-    process(path, opath, bdir)
+    # print(lineprocess15('(log_{3}*(m^2+2)=3)	等式	等式	17275215'))
+    # process(path, opath, bdir)
+    shuffle_data(path, bdir, nbdir, opath)
+    # datagenerator()
+    # print(lineprocess18('|a+c|*((x/(|x|)))+((y/(|y|)))+((z/(|z|)))+(((|xyz|)/(xyz)))/|a+c|'))
     # print(lineprocess16('p:x^2-4x+3≤0'))
     # print('asd2fff'.replace('asd', 'c'))
     # print(lineprocess14('m=-(1/2)	等式	17274702'))
