@@ -294,30 +294,48 @@ def lineprocess21(lines):
 
     return olines
 
+@func_timeout.func_set_timeout(0.1)
+def lineprocess21(line):
+    spt = line.split()
+
+    exp1 = ExpRepr(spt[0])
+    exp2 = ExpRepr(spt[1])
+
+    exp1.rpar_obj()
+    exp2.rpar_obj()
+
+    spt[0] = exp1.get_train_form()
+    spt[1] = exp2.get_train_form()
+
+    return '\t'.join(spt) + '\n'
+
+
+
 
 def process(path, opath, bdir):
     lines = getalldatatolines(path, bdir)
 
     olines = []
 
-    olines = lineprocess21(lines)
+
+    # olines = lineprocess21(lines)
 
     err = 0
     cnt = 0
-    # with open('C:\WorkSpace\ExpData\ExpDatav2\exceptdata6.csv', 'w+', encoding='utf-8') as efile:
-    #     for lidx, line in enumerate(lines):
-    #         if lidx % 100 == 0:
-    #             print(lidx)
-    #         try:
-    #             olines.extend(lineprocess20(line))
-    #             # olines.append(lineprocess13(line))
-    #         except:
-    #             print(line)
-    #             print(lidx)
-    #             efile.write(line)
-    #             err += 1
-    #             if err % 1000 == 0:
-    #                 print(err)
+    with open('C:\WorkSpace\ExpData\ExpDatav2\exceptdata7.csv', 'w+', encoding='utf-8') as efile:
+        for lidx, line in enumerate(lines):
+            if lidx % 100 == 0:
+                print(lidx)
+            try:
+                olines.extend(lineprocess21(line))
+                # olines.append(lineprocess13(line))
+            except:
+                print(line)
+                print(lidx)
+                efile.write(line)
+                err += 1
+                if err % 1000 == 0:
+                    print(err)
 
         # olines.extend(lineprocess11(line))
         # oset = oset | lineprocess5(line)
@@ -482,7 +500,7 @@ def shuffle_data(path, bdir, nbdir, opath):
 if __name__ == '__main__':
     # 数据文件夹path，读取所有以bdir结尾的文件，并且输出到opath中输出文件名为系统当前时间+.csv
     path = 'C:\WorkSpace\ExpData\ExpDatav2'
-    bdir = '20201211112320.csv'
+    bdir = '20201211170109.csv'
     nbdir = '20201211163218.csv'
     opath = 'C:\WorkSpace\ExpData\ExpDatav2'
     dpath = 'C:\WorkSpace\ExpData\ExpDatav2'
@@ -496,8 +514,8 @@ if __name__ == '__main__':
     # delete_var_num(path, dpath, opath, bdir, dbdir, num)
     # get_var_distri(path, bdir, num)
     # print(lineprocess15('(log_{3}*(m^2+2)=3)	等式	等式	17275215'))
-    # process(path, opath, bdir)
-    shuffle_data(path, bdir, nbdir, opath)
+    process(path, opath, bdir)
+    # shuffle_data(path, bdir, nbdir, opath)
     # datagenerator()
     # print(lineprocess18('|a+c|*((x/(|x|)))+((y/(|y|)))+((z/(|z|)))+(((|xyz|)/(xyz)))/|a+c|'))
     # print(lineprocess16('p:x^2-4x+3≤0'))

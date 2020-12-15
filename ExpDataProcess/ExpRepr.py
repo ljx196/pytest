@@ -471,19 +471,69 @@ class ExpRepr(object):
             return var
 
 
+    def get_train_form(self, exp_obj=None):
+        if exp_obj == None:
+            exp_obj = self
+        rst = ''
+
+        for exp_obj_ in exp_obj.childrens:
+            rst += self.get_train_form(exp_obj_)
+
+        if len(exp_obj.childrens) == 0:
+            rst = self._train_pat_form(exp_obj._pat).replace('e?x?p', self._add_wp(exp_obj.exp))
+        else:
+            rst = self._train_pat_form(exp_obj._pat).replace('e?x?p', self._add_wp(rst))
+        rst = self._add_wp(rst)
+        if exp_obj._op != '#':
+            rst = exp_obj._op + rst
+
+        return rst
+
+    def _add_wp(self, exp):
+        replace_exp = exp
+        if replace_exp[0] != ' ':
+            replace_exp = ' ' + replace_exp
+        if replace_exp[-1] != ' ':
+            replace_exp = replace_exp + ' '
+        return replace_exp
+
+    def _train_pat_form(self, pat):
+        if pat == 'e?x?p':
+            return pat
+        rpat = ''
+        for idx, i in enumerate(pat):
+            if idx == 0:
+                rpat += i
+                if i == '(' and pat.find('e?x?p') != idx + 1:
+                    rpat += ' '
+                continue
+            if i == '(' and pat[idx-1] != ' ':
+                rpat += ' ('
+                if pat.find('e?x?p') != idx + 1:
+                    rpat += ' '
+                continue
+            rpat += i
+
+        while rpat.find('))') != -1:
+            rpat = rpat.replace('))', ') )')
+
+        return rpat
+
+
+
 if __name__ == '__main__':
     # print(' ' * 6 + '123')
-    a = ExpRepr('x*z+y+z+2*cos(c+e*b)')
-    print(a.fake_tree(a))
+    # a = ExpRepr('y=-2*x+-1/12')
+    # a = ExpRepr('f(sin(x))+cos(a)+c')
+    # a = ExpRepr('x*z+y+z+2*cos(c+e*b)*sin(x)')
+    # print(a.fake_tree(a))
+    # a = ExpRepr('(f(x))')
     # a = ExpRepr('(f(x))^2')
     # a = ExpRepr('g(x)=log_2(x-2a)+(((a+1-x)^(1/2)))(a<1)')
     # a = ExpRepr('abs(f(a))=abs(((1/3)(1-a)))<2-6<a-1<6')
     # a = ExpRepr('m(f(x))^2')
-    # a = ExpRepr('x^2-2*a*x+a=0')
-    a = a.rpar_obj()
     # a = ExpRepr('((((Pi)/2)+a))')
     # a = ExpRepr('(bcosC-a)+2bsinC-c=0')
-    print(a.datagen(3))
     # s = time.time()
     # a = ExpRepr('1+cos(b*c)')
     # a = ExpRepr('3^(1/2)')
@@ -509,6 +559,9 @@ if __name__ == '__main__':
     # a = ExpRepr('f_S(1)=(Com_1_1)=1')
     # a = ExpRepr('y=1+sin0=1')
     # a = ExpRepr('y=1+sin(-(((Pi)/2)))=0')
+    a = ExpRepr('x^2-2*a*x+a=0')
+    a = a.rpar_obj()
+    print(a.get_train_form())
     print(a.good_form())
     # print(a.exp)
 
