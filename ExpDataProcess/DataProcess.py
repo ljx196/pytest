@@ -294,7 +294,6 @@ def lineprocess21(lines):
 
     return olines
 
-@func_timeout.func_set_timeout(0.1)
 def lineprocess21(line):
     spt = line.split()
 
@@ -322,13 +321,13 @@ def process(path, opath, bdir):
 
     err = 0
     cnt = 0
-    with open('C:\WorkSpace\ExpData\ExpDatav2\exceptdata7.csv', 'w+', encoding='utf-8') as efile:
+    with open('C:\work\ExpData\exceptdata7.csv', 'w+', encoding='utf-8') as efile:
         for lidx, line in enumerate(lines):
-            if lidx % 100 == 0:
+            if lidx % 1000 == 0:
                 print(lidx)
             try:
-                olines.extend(lineprocess21(line))
-                # olines.append(lineprocess13(line))
+                # olines.extend(lineprocess21(line))
+                olines.append(lineprocess21(line))
             except:
                 print(line)
                 print(lidx)
@@ -499,11 +498,11 @@ def shuffle_data(path, bdir, nbdir, opath):
 
 if __name__ == '__main__':
     # 数据文件夹path，读取所有以bdir结尾的文件，并且输出到opath中输出文件名为系统当前时间+.csv
-    path = 'C:\WorkSpace\ExpData\ExpDatav2'
+    path = 'C:\work\ExpData'
     bdir = '20201211170109.csv'
     nbdir = '20201211163218.csv'
-    opath = 'C:\WorkSpace\ExpData\ExpDatav2'
-    dpath = 'C:\WorkSpace\ExpData\ExpDatav2'
+    opath = 'C:\work\ExpData'
+    dpath = 'C:\work\ExpData'
     dbdir = '20201207142503.csv'
     num = 1000
     # print(lineprocess20('x^2-4x+3≤0'))
