@@ -62,23 +62,17 @@ def AES_decrypt(secret_str, key):
 
 
 if __name__ == '__main__':
-#     org_str = '''apple horizonljx@gmail.com Asliujiaxin2021..
-# apple 920513658@qq.com Asliujiaxin2020..
-# qq 920513658 As18789688
-# 网易邮箱 liujiaxinwow@163.com 18789688​
-# northplus horizon77 As18789688
-# bangumi horizonljx@gmail.com a18789688​
-# steam horizon_5 a18789688
-# huobi 18223530182 a18789688'''
-    secret_str = '''
-DcxYpKvefRvw+l/32KxrKRMXtECD5lrulWA56lu6eZ+rgKfNYoHiJw6dcB1wpObx+HtFdqznc4Kg
-7xeSsZ0Jo3Ce8Gy1kieJTMwEk8wrm654DoP5LeWLZECeW6aZICyrVbm7sDXcPaiT9r4NqAwT7VOs
-zmXJ0UlrQmRjLr1j0ZkOpAADXAYHB7hAO054xbnW9FZJWDXAyb2qz9JHUu1kpnAh+dAZcpWEXfCQ
-+kQLs5TooE0ciejFDB3fKAXcYECjxLdoNtk54l4zOpyz6aG646gZwqRB6yJtRJR3B9yMH9fGVI6E
-FN8OeXfbEXHmm+vdHEO+klPtMh6jJex+yiDrZdMhnS3Zzo4+hpdtGpqcuvE/yJ5fLUL+SXdorNop
-Bd7A
-    '''
+    org_str = ''
+
+#     secret_str = '''
+# DcxYpKvefRvw+l/32KxrKRMXtECD5lrulWA56lu6eZ+rgKfNYoHiJw6dcB1wpObx+HtFdqznc4Kg
+# 7xeSsZ0Jo3Ce8Gy1kieJTMwEk8wrm654DoP5LeWLZECeW6aZICyrVbm7sDXcPaiT9r4NqAwT7VOs
+# zmXJ0UlrQmRjLr1j0ZkOpAADXAYHB7hAO054xbnW9FZJWDXAyb2qz9JHUu1kpnAh+dAZcpWEXfCQ
+# +kQLs5TooE0ciejFDB3fKAXcYECjxLdoNtk54l4zOpyz6aG646gZwqRB6yJtRJR3B9yMH9fGVI6E
+# FN8OeXfbEXHmm+vdHEO+klPtMh6jJex+yiDrZdMhnS3Zzo4+hpdtGpqcuvEr93CiN7NwDMr8RL6Z
+# Sf2Aq0Qf1ZUMQGC9eUdA3BBM3CCH2KIc7CfnXVM175BElaY=
+#     '''
     # 秘钥
     key = ''
-    # secret_str = AES_encrypt(org_str, key)
-    AES_decrypt(secret_str, key)
+    secret_str = AES_encrypt(org_str, key)
+    # AES_decrypt(secret_str, key)
