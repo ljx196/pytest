@@ -294,6 +294,7 @@ def lineprocess21(lines):
 
     return olines
 
+@func_timeout.func_set_timeout(0.1)
 def lineprocess21(line):
     spt = line.split()
 
@@ -307,6 +308,11 @@ def lineprocess21(line):
     spt[1] = exp2.get_train_form()
 
     return '\t'.join(spt) + '\n'
+
+def lineprocess22(line):
+    spt = line.split('\t')
+
+    print(spt)
 
 
 
@@ -496,13 +502,54 @@ def shuffle_data(path, bdir, nbdir, opath):
     writetofile(olines, opath)
 
 
+def split_data(path, opath, bdir):
+    lines = getalldatatolines(path, bdir)
+
+    lent = len(lines)
+
+    writetofile(lines[:int(lent/100)], opath)
+    writetofile(lines[int(lent/100):], opath)
+
+def test_split(path, opath, bdir):
+    with open(os.path.join(path, bdir), "r", encoding='utf-8') as lines:
+        for line in lines:
+            subword = line.strip('\n').split("\t")
+            express = subword[0] + " , " + subword[1]
+            target = 0
+            if subword[2] == "1":
+                target = 1
+            else:
+                target = 0
+            print( {
+                "inputs": express,
+                "targets": target,
+            })
+
+def test_accuracy(path, bdir, bdir2):
+    lines = getalldatatolines(path, bdir)
+    lines2 = getalldatatolines(path, bdir2)
+
+    tot = 0
+    rt = 0
+    for idx, line in enumerate(lines):
+        if line.split('_')[1] == lines2[idx].split('\t')[2]:
+            rt += 1
+        else:
+            print(line + " ### " + lines2[idx])
+
+        tot += 1
+
+    print(rt / tot)
+
+
+
 if __name__ == '__main__':
     # 数据文件夹path，读取所有以bdir结尾的文件，并且输出到opath中输出文件名为系统当前时间+.csv
-    path = 'C:\work\ExpData'
-    bdir = '20201211170109.csv'
-    nbdir = '20201211163218.csv'
-    opath = 'C:\work\ExpData'
-    dpath = 'C:\work\ExpData'
+    path = 'C:\WorkSpace\ExpData\ExpDatav2'
+    bdir = 'ans.out'
+    nbdir = 'express5.csv'
+    opath = 'C:\WorkSpace\ExpData\ExpDatav2'
+    dpath = 'C:\WorkSpace\ExpData\ExpDatav2'
     dbdir = '20201207142503.csv'
     num = 1000
     # print(lineprocess20('x^2-4x+3≤0'))
@@ -513,7 +560,11 @@ if __name__ == '__main__':
     # delete_var_num(path, dpath, opath, bdir, dbdir, num)
     # get_var_distri(path, bdir, num)
     # print(lineprocess15('(log_{3}*(m^2+2)=3)	等式	等式	17275215'))
-    process(path, opath, bdir)
+    # process(path, opath, bdir)
+    # test_split(path, opath, bdir)
+    test_accuracy(path, bdir, nbdir)
+    # split_data(path, opath, bdir)
+    # lineprocess22(' f ( a ) = f ( 1 / 2 ) 	 ( 6 / 7 ) ≤ x ≤ 3 	0')
     # shuffle_data(path, bdir, nbdir, opath)
     # datagenerator()
     # print(lineprocess18('|a+c|*((x/(|x|)))+((y/(|y|)))+((z/(|z|)))+(((|xyz|)/(xyz)))/|a+c|'))
